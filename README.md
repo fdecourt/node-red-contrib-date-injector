@@ -1,14 +1,16 @@
 # Date inject Node for Node-RED
 
-This repository provides a custom Node-RED node that allows you to inject current date time in many format, allowing you to calculate interval by adding years, months, weeks, days, hours, minutes and seconds in many format, using Day.js.
-
----
+A **Node-RED** node that injects the current date and time into a message, with customizable formats, operations (add/subtract time), and language support via **Day.js**. Supports advanced date formatting, localized formats, and multiple time units.
+Thanks Day.js ;-)
 
 ## Features
 
-- Format in many format / language the current Date / Time
-- Create as many output as you need, great to calculate end date (current day + xx)
-- Choose the language you want to use for months and weeks name
+- **Inject current date and time** into a message field.
+- **Customize date format** using Day.js formatting rules (e.g., `YYYY-MM-DD`, `dddd`, etc.).
+- **Add or subtract time** from the current date (e.g., `+2 days`, `-3 hours`).
+- **Localization** support for multiple languages (`en`, `fr`, `es`).
+- Supports **advanced date formats** with the `dayjs` library.
+- Returns **error handling** if required fields (message name or format) are missing.
 
 ## Installation
 
