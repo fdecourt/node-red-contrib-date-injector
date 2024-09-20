@@ -1,0 +1,176 @@
+<script type="text/html" data-template-name="date-injector">
+    <!-- Node Name Input -->
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Node Name</label>
+        <input type="text" id="node-input-name" placeholder="Enter node name">
+    </div>
+
+    <!-- Language Selection Dropdown -->
+    <div class="form-row">
+        <label for="node-input-lang"><i class="fa fa-language"></i> Language</label>
+        <select id="node-input-lang">
+            <!-- Dropdown options for supported languages -->
+            <option value="en">English</option>
+            <option value="fr">French</option>
+            <option value="es">Spanish</option>
+            <!-- Add more languages as needed -->
+        </select>
+    </div>
+
+    <!-- Button to Add a Message Field -->
+    <div class="form-row">
+        <button type="button" id="add-msg-field" class="editor-button">
+            <i class="fa fa-plus"></i> Add Message Field
+        </button>
+    </div>
+
+    <!-- Container for dynamically added message fields -->
+    <div id="msg-fields-container"></div>
+</script>
+
+<style>
+    /* Ensure two-column layout for operation and amount */
+    .operation-amount-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two equal-width columns */
+        gap: 20px; /* Space between the two columns */
+        align-items: start;
+    }
+
+    /* Ensure that label is on top and field is below */
+    .operation-amount-column {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Additional styling for the fields and labels */
+    .node-input-operation, .node-input-amount {
+        width: 100%; /* Make fields take full column width */
+    }
+
+    /* Add space above the Remove button */
+    .remove-msg-field {
+        margin-top: 20px; /* Add space above the remove button */
+		float: left;
+    }
+
+</style>
+
+<script type="text/javascript">
+    // Function to create a new message field dynamically with relevant icons for each input
+    function createMsgField(index) {
+        return `
+            <div class="form-row msg-field" data-index="${index}">
+                <!-- Message Name Input with Icon -->
+                <label for="msgName-${index}"><i class="fa fa-tag"></i> Message Name</label>
+                <input type="text" class="node-input-msgName" id="msgName-${index}" placeholder="Message name (e.g., start)">
+                
+                <!-- Date Format Input with Calendar Icon -->
+                <label for="format-${index}"><i class="fa fa-calendar"></i> Date Format</label>
+                <input type="text" class="node-input-format" id="format-${index}" placeholder="Date format (e.g., YYYY-MM-DD)">
+                
+                <!-- Operation and Amount in a two-column layout -->
+                <div class="operation-amount-row">
+                    <!-- First column: Operation label and field -->
+                    <div class="operation-amount-column">
+                        <label for="operation-${index}"><i class="fa fa-plus-minus"></i> Operation</label>
+                        <select class="node-input-operation" id="operation-${index}">
+                            <option value="">None</option>
+                            <option value="+">Add</option>
+                            <option value="-">Subtract</option>
+                        </select>
+                    </div>
+
+                    <!-- Second column: Amount label and field -->
+                    <div class="operation-amount-column">
+                        <label for="amount-${index}">Amount</label>
+                        <input type="text" class="node-input-amount" id="amount-${index}" placeholder="Amount (e.g., 10S for 10 seconds)">
+                    </div>
+                </div>
+                
+                <!-- Button to remove the message field, with space above -->
+                <button type="button" class="editor-button remove-msg-field"><i class="fa fa-minus"></i> Remove</button>
+            </div>
+        `;
+    }
+
+    // Function to load message fields from saved configuration data
+    function loadMsgFields(container, data) {
+        let index = 0;
+        if (data && data.length) {
+            data.forEach(field => {
+                const fieldHtml = createMsgField(index);
+                container.append(fieldHtml);
+                container.find(`.msg-field[data-index="${index}"] .node-input-msgName`).val(field.msgName);
+                container.find(`.msg-field[data-index="${index}"] .node-input-format`).val(field.format);
+                container.find(`.msg-field[data-index="${index}"] .node-input-operation`).val(field.operation);
+                container.find(`.msg-field[data-index="${index}"] .node-input-amount`).val(field.amount);
+                index++;
+            });
+        } else {
+            container.append(createMsgField(index)); // Add one field by default
+        }
+    }
+
+    // Register the custom node with Node-RED
+    RED.nodes.registerType('date-injector', {
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: { value: "" },
+            language: { value: "en" }, // Default language is English
+            msgFields: { value: [] }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "date.png",
+        label: function () {
+            return this.name || "date-injector";
+        },
+        oneditprepare: function () {
+            const container = $("#msg-fields-container");
+
+            // Load the message fields from the saved configuration
+            const msgFields = this.msgFields;
+            loadMsgFields(container, msgFields);
+
+            // Set the language dropdown to the saved value
+            $("#node-input-lang").val(this.language);
+
+            // Add new message field on button click
+            $("#add-msg-field").on("click", function () {
+                const index = container.find(".msg-field").length;
+                container.append(createMsgField(index));
+            });
+
+            // Remove message field on click and remove its data
+            container.on("click", ".remove-msg-field", function () {
+                $(this).closest(".msg-field").remove();
+            });
+        },
+        oneditsave: function () {
+            const container = $("#msg-fields-container");
+            const msgFields = [];
+
+            // Collect message field data and ensure they are correctly mapped
+            container.find(".msg-field").each(function () {
+                const msgName = $(this).find(".node-input-msgName").val();
+                const format = $(this).find(".node-input-format").val();
+                const operation = $(this).find(".node-input-operation").val();
+                const amount = $(this).find(".node-input-amount").val();
+
+                // Ensure all fields are properly saved for each msg block
+                msgFields.push({
+                    msgName: msgName || "",  // Save the message name
+                    format: format || "YYYY-MM-DD",  // Default format if empty
+                    operation: operation || "",  // Operation (add/subtract)
+                    amount: amount || ""  // Time amount
+                });
+            });
+
+            // Save the msgFields and the language
+            this.msgFields = msgFields;
+            this.language = $("#node-input-lang").val();
+        }
+    });
+</script>

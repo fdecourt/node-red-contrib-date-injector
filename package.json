@@ -1,0 +1,33 @@
+{
+  "name": "@fdecourt/node-red-contrib-date-injector",
+  "version": "1.0.0",
+  "description": "Node-RED custom node to inject dates with formatting and timezone support using Day.js.",
+  "main": "date-injector.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node-red",
+    "date",
+    "inject",
+    "format",
+    "timezone",
+    "dayjs"
+  ],
+  "author": "fdecourt",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fdecourt/node-red-contrib-date-injector.git"
+  },
+  "dependencies": {
+    "dayjs": "latest",
+    "dayjs-plugin-utc": "latest",
+    "dayjs-ext": "latest"
+  },
+  "node-red": {
+    "nodes": {
+      "date-injector": "date-injector.js"
+    }
+  }
+}
